@@ -1,0 +1,50 @@
+{
+  "name": "Sample Design",
+  "widgets": [
+    {
+      "id": "w-text-1",
+      "type": "text_input",
+      "props": {
+        "label": "Name",
+        "value": ""
+      }
+    },
+    {
+      "id": "w-toggle-1",
+      "type": "toggle",
+      "props": {
+        "label": "Enable feature",
+        "value": true
+      }
+    },
+    {
+      "id": "w-multi-1",
+      "type": "multiselect",
+      "props": {
+        "label": "Tags",
+        "options": ["Alpha", "Beta", "Gamma"],
+        "default": ["Alpha", "Gamma"]
+      }
+    },
+    {
+      "id": "w-color-1",
+      "type": "color_picker",
+      "props": {
+        "label": "Accent",
+        "value": "#FF6B6B"
+      }
+    },
+    {
+      "id": "w-table-1",
+      "type": "table",
+      "props": {
+        "width": "stretch",
+        "custom_width": 0,
+        "height": "auto",
+        "custom_height": 0,
+        "border": true
+      }
+    }
+  ]
+}
+

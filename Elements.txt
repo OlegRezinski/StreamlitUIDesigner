@@ -1,0 +1,83 @@
+Text elements:
+    st.title
+    st.header
+    st.subheader
+    st.markdown
+    st.badge
+    st.caption
+    st.code
+    st.divider
+    st.echo
+    st.latex
+    st.text
+    st.help
+
+
+Data elements:
+    st.dataframe
+    st.data_editor
+    st.table
+    st.metric
+    st.json
+
+Chart elements:
+    st.area_chart
+    st.bar_chart
+    st.line_chart
+    st.map
+    st.scatter_chart
+    st.graphviz_chart
+
+
+Input elements:
+    st.download_button
+    st.button
+    st.link_button
+    st.page_link
+    st.checkbox
+    st.color_picker
+    st.feedback
+    st.multiselect
+    st.pills
+    st.radio
+    st.segmented_control
+    st.selectbox
+    st.select_slider
+    st.toggle
+    st.number_input
+    st.slider
+    st.date_input
+    st.datetime_input
+    st.time_input
+    st.chat_input
+    st.text_area
+    st.text_input
+    st.audio_input
+    st.camera_input
+    st.file_uploader
+
+Media elements:
+    st.audio
+    st.image
+    st.logo
+    st.pdf
+    st.video
+
+
+Layouts and containers
+    st.columns
+    st.container
+    st.empty
+    st.expander
+    st.form
+    st.popover
+    st.sidebar
+    st.tabs
+
+Chat elements:
+    st.chat_input
+    st.status
+
+Other:
+    st.progress
+    st.spinner

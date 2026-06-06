@@ -3,12 +3,112 @@
 This document lists the properties shown in the Properties pane for each widget in the widget palette.
 
 ## Button
-- Label
-- Background color
-- Text color
-- Width
-- Height
-- Expand
+
+Display a button widget. This replaces the legacy Button section at the top of this file.
+
+Function signature
+    st.button(label, key=None, help=None, on_click=None, args=None, kwargs=None, *, type="secondary", icon=None, icon_position="left", disabled=False, use_container_width=None, width="content", shortcut=None)
+
+label (str)
+
+    Default: "Button"
+    The label displayed on the button.
+    In properties pane: text field.
+    Always generate in code as the first positional argument.
+    The label can optionally contain GitHub-flavored Markdown of the following types: Bold, Italics, Strikethroughs, Inline Code, Links, and Images.
+
+key (str, int, or None)
+
+    Auto-generated from widget id. Display generated key in properties pane; if key is changed, apply the change to generated code as well.
+
+help (str or None)
+
+    Default: None (empty string in pane)
+    A tooltip that gets displayed when the button is hovered over. If this is None (default), no tooltip is displayed.
+    Generate in code only if non-empty.
+
+type ("primary", "secondary", or "tertiary")
+
+    Default: "secondary"
+    In properties pane should be a selectbox with options "primary", "secondary", and "tertiary".
+
+    An optional string that specifies the button type. This can be one of the following:
+
+    "primary": The button's background is the app's primary color for additional emphasis.
+    "secondary" (default): The button's background coordinates with the app's background color for normal emphasis.
+    "tertiary": The button is plain text without a border or background for subtlety.
+
+icon (str or None)
+
+    Default: "" (None)
+    In properties pane: text field.
+    An optional emoji or icon to display next to the button label. If empty, no icon is displayed and icon is not emitted in code.
+    Accepted formats:
+    - A single-character emoji. For example, "🚨" or "🔥". Emoji short codes are not supported.
+    - An icon from the Material Symbols library (rounded style) in the format ":material/icon_name:" where "icon_name" is the name of the icon in snake case.
+    - "spinner": Displays a spinner as an icon.
+    Generate in code only if non-empty.
+
+icon_position ("left" or "right")
+
+    Default: "left"
+    Should not be displayed in properties pane.
+    Generate in code only when icon is non-empty; use default value "left".
+
+disabled (bool)
+
+    Default: False
+    In properties pane: checkbox with default value False.
+    Generate in code only if True.
+
+width ("content", "stretch", or "custom")
+
+    The width of the button element. This can be one of the following:
+
+    "content" (default): The width of the button matches the width of its content, but doesn't exceed the width of the parent container.
+    "stretch": The width of the button matches the width of the parent container.
+    "custom": The width of the button is specified by the custom width property.
+
+    In properties pane: selectbox with options "content", "stretch", "custom".
+
+custom width (int)
+
+    Default: 200
+    if width property is not set to "custom" - disabled, else enabled.
+    An integer specifying the width in pixels: The button has a fixed width. If the specified width is greater than the width of the parent container, the width of the button matches the width of the parent container.
+
+background_color (colorpicker)
+
+    Default: "" (no custom color)
+    In properties pane: color picker.
+    When empty (default), no custom background color is applied — the button uses its native Streamlit type styling.
+    When set to a hex color value (e.g. "#FF5733"), inject a CSS <style> block after the button to override the button's background color.
+    The CSS targets the button via its key using the `.st-key-{key} button` selector.
+    Generate in code only if non-empty.
+
+text_color (colorpicker)
+
+    Default: "" (no custom color)
+    In properties pane: color picker.
+    When empty (default), no custom text color is applied — the button uses its native Streamlit type styling.
+    When set to a hex color value (e.g. "#FFFFFF"), inject a CSS <style> block after the button to override the button's text color.
+    The CSS targets the button via its key using the `.st-key-{key} button` selector.
+    Generate in code only if non-empty.
+
+on_click, args, kwargs
+
+    Should not be displayed in properties pane. Not generated in code.
+
+use_container_width
+
+    Deprecated. Should not be displayed in properties pane. Not generated in code.
+
+shortcut (str or None)
+
+    Should not be displayed in properties pane. Not generated in code.
+
+
+
 
 ## Checkbox
 - Label

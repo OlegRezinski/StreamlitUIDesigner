@@ -236,3 +236,17 @@ Use this checklist before marking a milestone complete.
 - [ ] `width="stretch"` emits `width='stretch'` in codegen.
 - [ ] `width="custom"` with `custom_width` generates integer width in codegen.
 
+## Button (updated)
+
+- [ ] Widget appears in palette under "Input elements".
+- [ ] Adding widget shows a native st.button in the canvas.
+- [ ] Generated code uses `st.button(label, key=..., type=..., width=...)`.
+- [ ] No CSS/unsafe_allow_html in generated code.
+- [ ] help is only emitted when non-empty.
+- [ ] icon is only emitted when non-empty.
+- [ ] disabled is only emitted when True.
+- [ ] width="content" generates `width='content'`.
+- [ ] width="stretch" generates `width='stretch'`.
+- [ ] width="custom" with custom_width generates integer width.
+- [ ] Custom key overrides auto-generated key.
+- [ ] type="primary"/"secondary"/"tertiary" generates correctly.

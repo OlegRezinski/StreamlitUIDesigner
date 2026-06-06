@@ -107,46 +107,14 @@ def _safe_step(value: Any) -> float:
     return step if step > 0 else 1.0
 
 
-def _normalize_css_size(value: Any) -> str | None:
-    if value is None:
-        return None
-    text = str(value).strip()
-    if not text:
-        return None
-    if text.isdigit():
-        return f"{text}px"
-    return text
-
-
-def _button_style(widget: WidgetInstance) -> str:
-    bg_color = str(widget.props.get("background_color", "#2E6CF6")).strip()
-    text_color = str(widget.props.get("text_color", "#FFFFFF")).strip()
-    width = _normalize_css_size(widget.props.get("width", ""))
-    height = _normalize_css_size(widget.props.get("height", ""))
-    expand = bool(widget.props.get("expand", False))
-
-    if expand:
-        width = "100%"
-
-    styles = [
-        f"background-color: {bg_color} !important",
-        f"color: {text_color} !important",
-        "border: none !important",
-        "border-radius: 0.5rem !important",
-        "padding: 0.5rem 1rem !important",
-        "cursor: pointer",
-    ]
-    if width:
-        styles.append(f"width: {width} !important")
-    if height:
-        styles.append(f"height: {height} !important")
-    return "; ".join(styles)
-
-
-def _button_container_style(widget: WidgetInstance) -> str:
-    if not bool(widget.props.get("expand", False)):
-        return ""
-    return "width: 100% !important; display: block;"
+def _button_width_value(width_mode: Any, custom_width: Any) -> str | int:
+    normalized = str(width_mode).strip().lower()
+    if normalized in {"stretch", "content"}:
+        return normalized
+    if normalized == "custom":
+        parsed = _safe_int(custom_width, 200)
+        return parsed if parsed > 0 else "content"
+    return "content"
 
 
 def _safe_int(value: Any, default: int) -> int:
@@ -957,22 +925,48 @@ def _codegen_badge(widget: WidgetInstance) -> List[str]:
 
 def _codegen_button(widget: WidgetInstance) -> List[str]:
     label = widget.props.get("label", "Button")
-    style = _button_style(widget)
-    container_style = _button_container_style(widget)
-    container_key = f"button_{widget.id}"
+    custom_key = str(widget.props.get("key", "")).strip()
+    key = custom_key if custom_key else widget.id
+    help_text = _metric_text_or_none(widget.props.get("help", ""))
+    btn_type = widget.props.get("type", "secondary")
+    icon = str(widget.props.get("icon", "")).strip()
+    disabled = bool(widget.props.get("disabled", False))
+    width_mode = widget.props.get("width", "content")
+    custom_width = widget.props.get("custom_width", 200)
+    width = _button_width_value(width_mode, custom_width)
+    bg_color = str(widget.props.get("background_color", "")).strip()
+    text_color = str(widget.props.get("text_color", "")).strip()
+
     lines = [
-        f"with st.container(key={container_key!r}):",
-        f"    st.button({label!r}, key={widget.id!r})",
+        "st.button(",
+        f"    {label!r},",
+        f"    key={key!r},",
     ]
-    css_parts = [f".st-key-{container_key} button {{ {style} }}"]
-    if container_style:
-        css_parts.append(f".st-key-{container_key} {{ {container_style} }}")
-    lines.extend([
-        "st.markdown(",
-        f"    \"<style>{' '.join(css_parts)}</style>\",",
-        "    unsafe_allow_html=True,",
-        ")",
-    ])
+    if help_text is not None:
+        lines.append(f"    help={help_text!r},")
+    lines.append(f"    type={btn_type!r},")
+    if icon:
+        lines.append(f"    icon={icon!r},")
+    if disabled:
+        lines.append(f"    disabled={disabled},")
+    lines.append(f"    width={width!r}," if isinstance(width, str) else f"    width={width},")
+    lines.append(")")
+
+    # Inject CSS for custom colors
+    css_rules: list[str] = []
+    if bg_color:
+        css_rules.append(f"background-color: {bg_color} !important")
+    if text_color:
+        css_rules.append(f"color: {text_color} !important")
+    if css_rules:
+        selector = f".st-key-{key} button"
+        css_str = f"{selector} {{ {'; '.join(css_rules)} }}"
+        lines.extend([
+            "st.markdown(",
+            f"    \"<style>{css_str}</style>\",",
+            "    unsafe_allow_html=True,",
+            ")",
+        ])
     return lines
 
 
@@ -2498,15 +2492,40 @@ def _render_text(widget: WidgetInstance) -> None:
 
 def _render_button(widget: WidgetInstance) -> None:
     label = widget.props.get("label", "Button")
-    style = _button_style(widget)
-    container_style = _button_container_style(widget)
-    container_key = f"preview_button_{widget.id}"
-    with st.container(key=container_key):
-        st.button(label, key=_preview_key(widget))
-    css_parts = [f".st-key-{container_key} button {{ {style} }}"]
-    if container_style:
-        css_parts.append(f".st-key-{container_key} {{ {container_style} }}")
-    st.markdown(f"<style>{' '.join(css_parts)}</style>", unsafe_allow_html=True)
+    help_text = _metric_text_or_none(widget.props.get("help", ""))
+    btn_type = widget.props.get("type", "secondary")
+    icon = str(widget.props.get("icon", "")).strip() or None
+    disabled = bool(widget.props.get("disabled", False))
+    width_mode = widget.props.get("width", "content")
+    custom_width = widget.props.get("custom_width", 200)
+    width = _button_width_value(width_mode, custom_width)
+    bg_color = str(widget.props.get("background_color", "")).strip()
+    text_color = str(widget.props.get("text_color", "")).strip()
+    key = _preview_key(widget)
+
+    kwargs: dict[str, Any] = {
+        "key": key,
+        "type": btn_type,
+        "disabled": disabled,
+        "width": width,
+    }
+    if help_text is not None:
+        kwargs["help"] = help_text
+    if icon:
+        kwargs["icon"] = icon
+
+    st.button(label, **kwargs)
+
+    # Inject CSS for custom colors
+    css_rules: list[str] = []
+    if bg_color:
+        css_rules.append(f"background-color: {bg_color} !important")
+    if text_color:
+        css_rules.append(f"color: {text_color} !important")
+    if css_rules:
+        selector = f".st-key-{key} button"
+        css_str = f"{selector} {{ {'; '.join(css_rules)} }}"
+        st.markdown(f"<style>{css_str}</style>", unsafe_allow_html=True)
 
 
 def _render_checkbox(widget: WidgetInstance) -> None:
@@ -3432,13 +3451,17 @@ def register_default_widgets() -> None:
         label="Button",
         props_schema=[
             PropDefinition("label", "Label", "text", "Button"),
-            PropDefinition("background_color", "Background color", "color", "#2E6CF6"),
-            PropDefinition("text_color", "Text color", "color", "#FFFFFF"),
-            PropDefinition("width", "Width", "text", ""),
-            PropDefinition("height", "Height", "text", ""),
-            PropDefinition("expand", "Expand", "bool", False),
+            PropDefinition("key", "Key", "text", ""),
+            PropDefinition("help", "Help tooltip", "text", ""),
+            PropDefinition("type", "Button type", "select", "secondary", options=["primary", "secondary", "tertiary"]),
+            PropDefinition("icon", "Icon", "text", ""),
+            PropDefinition("disabled", "Disabled", "bool", False),
+            PropDefinition("width", "Width", "select", "content", options=["content", "stretch", "custom"]),
+            PropDefinition("custom_width", "Custom width (px)", "int", 200),
+            PropDefinition("background_color", "Background color", "color", "#FFFFFF"),
+            PropDefinition("text_color", "Text color", "color", ""),
         ],
-        defaults={"label": "Button", "background_color": "#2E6CF6", "text_color": "#FFFFFF", "width": "", "height": "", "expand": False},
+        defaults={"label": "Button", "key": "", "help": "", "type": "secondary", "icon": "", "disabled": False, "width": "content", "custom_width": 200, "background_color": "#FFFFFF", "text_color": ""},
         codegen=_codegen_button,
         render=_render_button,
     ))

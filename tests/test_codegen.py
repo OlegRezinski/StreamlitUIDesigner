@@ -137,7 +137,7 @@ def test_codegen_columns_with_child() -> None:
     assert "st.text_input('Inside'" in code
 
 
-def test_codegen_button_styles() -> None:
+def test_codegen_button_native() -> None:
     design = Design(
         name="Test",
         widgets=[
@@ -146,25 +146,30 @@ def test_codegen_button_styles() -> None:
                 type="button",
                 props={
                     "label": "Click",
-                    "background_color": "#111111",
-                    "text_color": "#EEEEEE",
-                    "width": "120",
-                    "height": "40px",
-                    "expand": False,
+                    "key": "",
+                    "help": "",
+                    "type": "primary",
+                    "icon": "",
+                    "disabled": False,
+                    "width": "content",
+                    "custom_width": 200,
                 },
             )
         ],
     )
 
     code = generate_streamlit_code(design)
-    assert "st.markdown" in code
-    assert "background-color: #111111" in code
-    assert "color: #EEEEEE" in code
-    assert "width: 120px" in code
-    assert "height: 40px" in code
+    assert "st.button(" in code
+    assert "'Click'" in code
+    assert "key='w7'" in code
+    assert "type='primary'" in code
+    assert "width='content'" in code
+    # No button-specific CSS container wrapping
+    assert ".st-key-button_" not in code
+    assert "border-radius" not in code
 
 
-def test_codegen_button_expand_overrides_width() -> None:
+def test_codegen_button_stretch_width() -> None:
     design = Design(
         name="Test",
         widgets=[
@@ -173,15 +178,20 @@ def test_codegen_button_expand_overrides_width() -> None:
                 type="button",
                 props={
                     "label": "Wide",
-                    "width": "200",
-                    "expand": True,
+                    "key": "",
+                    "help": "",
+                    "type": "secondary",
+                    "icon": "",
+                    "disabled": False,
+                    "width": "stretch",
+                    "custom_width": 200,
                 },
             )
         ],
     )
 
     code = generate_streamlit_code(design)
-    assert "width: 100%" in code
+    assert "width='stretch'" in code
 
 
 def test_codegen_checkbox_toggle_color_picker() -> None:

@@ -28,11 +28,13 @@ def test_button_preview_reflects_all_properties() -> None:
         type="button",
         props={
             "label": "Preview Button",
-            "background_color": "#123456",
-            "text_color": "#ABCDEF",
-            "width": "120px",
-            "height": "40px",
-            "expand": False,
+            "key": "",
+            "help": "Click this",
+            "type": "primary",
+            "icon": ":material/thumb_up:",
+            "disabled": False,
+            "width": "content",
+            "custom_width": 200,
         },
     )
     design = Design(name="Test", widgets=[widget])
@@ -43,25 +45,20 @@ def test_button_preview_reflects_all_properties() -> None:
 
     assert any(btn.label == "Preview Button" for btn in at.button)
 
-    css = _find_markdown_with(at, "st-key-preview_button_btn-props")
-    assert css
-    assert "background-color: #123456" in css
-    assert "color: #ABCDEF" in css
-    assert "width: 120px" in css
-    assert "height: 40px" in css
 
-
-def test_button_preview_expand_sets_full_width() -> None:
+def test_button_preview_stretch_width() -> None:
     widget = WidgetInstance(
-        id="btn-expand",
+        id="btn-stretch",
         type="button",
         props={
-            "label": "Expand Button",
-            "background_color": "#111111",
-            "text_color": "#FFFFFF",
-            "width": "90px",
-            "height": "30px",
-            "expand": True,
+            "label": "Stretch Button",
+            "key": "",
+            "help": "",
+            "type": "secondary",
+            "icon": "",
+            "disabled": False,
+            "width": "stretch",
+            "custom_width": 200,
         },
     )
     design = Design(name="Test", widgets=[widget])
@@ -70,11 +67,7 @@ def test_button_preview_expand_sets_full_width() -> None:
     at.session_state["design"] = design
     at = at.run(timeout=15)
 
-    assert any(btn.label == "Expand Button" for btn in at.button)
-
-    css = _find_markdown_with(at, "st-key-preview_button_btn-expand")
-    assert css
-    assert "width: 100%" in css
+    assert any(btn.label == "Stretch Button" for btn in at.button)
 
 
 def test_text_preview_reflects_all_properties() -> None:

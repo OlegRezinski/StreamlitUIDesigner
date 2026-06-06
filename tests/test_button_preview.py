@@ -558,6 +558,3 @@ def test_json_preview_uses_sample_json_data() -> None:
     value = at.json[0].value
     assert '"foo": "bar"' in value
     assert '"level1"' in value
-
-
-

@@ -340,4 +340,3 @@ def test_button_defaults_include_colors():
     assert defn.defaults["background_color"] == "#FFFFFF"
     assert defn.defaults["text_color"] == ""
 
-

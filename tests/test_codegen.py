@@ -1252,4 +1252,3 @@ def test_codegen_graphviz_chart_default_dimensions() -> None:
     assert "st.graphviz_chart(" in code
     assert "width='stretch'" in code
     assert "height='content'" in code
-

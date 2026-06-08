@@ -432,6 +432,22 @@ def test_codegen_markdown_widget() -> None:
     assert "font-style: normal" in code
 
 
+def test_codegen_markdown_widget_uses_stable_single_quote_escaping() -> None:
+    design = Design(
+        name="Test",
+        widgets=[
+            WidgetInstance(
+                id="w20_escape",
+                type="markdown",
+                props={"text": "It's C:\\repo\\notes\nLine two"},
+            )
+        ],
+    )
+
+    code = generate_streamlit_code(design)
+    assert "st.markdown('It\\'s C:\\\\repo\\\\notes\\nLine two')" in code
+
+
 def test_codegen_badge_widget() -> None:
     design = Design(
         name="Test",

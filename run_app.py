@@ -7,7 +7,8 @@ from streamlit.web import bootstrap
 
 
 def main() -> None:
-    app_path = str(Path(__file__).parent / "app.py")
+    # app_path = str(Path(__file__).parent / "app.py")
+    app_path = str(Path(__file__).parent / "UI_2.py")
     args = ["--server.runOnSave=true"]
     bootstrap.run(app_path, False, args, {})
 

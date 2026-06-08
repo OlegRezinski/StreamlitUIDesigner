@@ -124,6 +124,17 @@ def _safe_int(value: Any, default: int) -> int:
         return default
 
 
+def _single_quoted_python_string(value: Any) -> str:
+    text = str(value)
+    escaped = (
+        text.replace("\\", "\\\\")
+        .replace("'", "\\'")
+        .replace("\n", "\\n")
+        .replace("\r", "\\r")
+    )
+    return f"'{escaped}'"
+
+
 def _sample_code_text() -> str:
     try:
         text = _SAMPLE_CODE_PATH.read_text(encoding="utf-8").rstrip()
@@ -917,7 +928,7 @@ def _codegen_badge(widget: WidgetInstance) -> List[str]:
         f"with st.container(key={container_key!r}):",
         f"    st.badge({text!r}, color='blue', width='content')",
         "st.markdown(",
-        f"    \"<style>{_badge_css_rule(container_key, container_style, content_style)}</style>\",",
+        f"    '<style>{_badge_css_rule(container_key, container_style, content_style)}</style>',",
         "    unsafe_allow_html=True,",
         ")",
     ]
@@ -963,7 +974,7 @@ def _codegen_button(widget: WidgetInstance) -> List[str]:
         css_str = f"{selector} {{ {'; '.join(css_rules)} }}"
         lines.extend([
             "st.markdown(",
-            f"    \"<style>{css_str}</style>\",",
+            f"    '<style>{css_str}</style>',",
             "    unsafe_allow_html=True,",
             ")",
         ])
@@ -1098,7 +1109,7 @@ def _codegen_text_input(widget: WidgetInstance) -> List[str]:
     lines.extend(
         [
             "st.markdown(",
-            f"    \"<style>{_date_input_width_css(widget.id, expand)}</style>\"",
+            f"    '<style>{_date_input_width_css(widget.id, expand)}</style>',",
             "    unsafe_allow_html=True,",
             ")",
         ]
@@ -1114,7 +1125,7 @@ def _codegen_text_area(widget: WidgetInstance) -> List[str]:
     lines.extend(
         [
             "st.markdown(",
-            f"    \"<style>{_date_input_width_css(widget.id, expand)}</style>\"",
+            f"    '<style>{_date_input_width_css(widget.id, expand)}</style>',",
             "    unsafe_allow_html=True,",
             ")",
         ]
@@ -1130,7 +1141,7 @@ def _codegen_text(widget: WidgetInstance) -> List[str]:
         f"with st.container(key={container_key!r}):",
         f"    st.text({text!r})",
         "st.markdown(",
-        f"    \"<style>{_text_css_rule(container_key, style)}</style>\",",
+        f"    '<style>{_text_css_rule(container_key, style)}</style>',",
         "    unsafe_allow_html=True,",
         ")",
     ]
@@ -1140,11 +1151,12 @@ def _codegen_title(widget: WidgetInstance) -> List[str]:
     text = widget.props.get("text", "Title")
     style = _title_style(widget)
     container_key = _heading_container_key("title", widget)
+    css = _heading_css_rule(container_key, 'h1', style)
     return [
         f"with st.container(key={container_key!r}):",
         f"    st.title({text!r})",
         "st.markdown(",
-        f"    \"<style>{_heading_css_rule(container_key, 'h1', style)}</style>\",",
+        f"    '<style>{css}</style>',",
         "    unsafe_allow_html=True,",
         ")",
     ]
@@ -1154,11 +1166,12 @@ def _codegen_header(widget: WidgetInstance) -> List[str]:
     text = widget.props.get("text", "Header")
     style = _header_style(widget)
     container_key = _heading_container_key("header", widget)
+    css = _heading_css_rule(container_key, 'h2', style)
     return [
         f"with st.container(key={container_key!r}):",
         f"    st.header({text!r})",
         "st.markdown(",
-        f"    \"<style>{_heading_css_rule(container_key, 'h2', style)}</style>\",",
+        f"    '<style>{css}</style>',",
         "    unsafe_allow_html=True,",
         ")",
     ]
@@ -1168,11 +1181,12 @@ def _codegen_subheader(widget: WidgetInstance) -> List[str]:
     text = widget.props.get("text", "Subheader")
     style = _subheader_style(widget)
     container_key = _heading_container_key("subheader", widget)
+    css = _heading_css_rule(container_key, 'h3', style)
     return [
         f"with st.container(key={container_key!r}):",
         f"    st.subheader({text!r})",
         "st.markdown(",
-        f"    \"<style>{_heading_css_rule(container_key, 'h3', style)}</style>\",",
+        f"    '<style>{css}</style>',",
         "    unsafe_allow_html=True,",
         ")",
     ]
@@ -1185,9 +1199,9 @@ def _codegen_markdown(widget: WidgetInstance) -> List[str]:
     container_key = _markdown_container_key(widget)
     return [
         f"with st.container(key={container_key!r}):",
-        f"    st.markdown({text!r})",
+        f"    st.markdown({_single_quoted_python_string(text)})",
         "st.markdown(",
-        f"    \"<style>{_markdown_css_rule(container_key, container_style, content_style)}</style>\",",
+        f"    '<style>{_markdown_css_rule(container_key, container_style, content_style)}</style>',",
         "    unsafe_allow_html=True,",
         ")",
     ]
@@ -1202,7 +1216,7 @@ def _codegen_caption(widget: WidgetInstance) -> List[str]:
         f"with st.container(key={container_key!r}):",
         f"    st.caption({text!r})",
         "st.markdown(",
-        f"    \"<style>{_caption_css_rule(container_key, container_style, content_style)}</style>\",",
+        f"    '<style>{_caption_css_rule(container_key, container_style, content_style)}</style>',",
         "    unsafe_allow_html=True,",
         ")",
     ]
@@ -1230,7 +1244,7 @@ def _codegen_divider(widget: WidgetInstance) -> List[str]:
         f"with st.container(key={container_key!r}):",
         "    st.divider()",
         "st.markdown(",
-        f"    \"<style>{_divider_css_rule(container_key, line_width, color)}</style>\",",
+        f"    '<style>{_divider_css_rule(container_key, line_width, color)}</style>',",
         "    unsafe_allow_html=True,",
         ")",
     ]
@@ -1264,7 +1278,7 @@ def _codegen_latex(widget: WidgetInstance) -> List[str]:
             f"        width={width!r}," if isinstance(width, str) else f"        width={width},",
             "    )",
             "st.markdown(",
-            f"    \"<style>{_latex_css_rule(container_key, font_size)}</style>\",",
+            f"    '<style>{_latex_css_rule(container_key, font_size)}</style>',",
             "    unsafe_allow_html=True,",
             ")",
         ]
@@ -1300,7 +1314,7 @@ def _codegen_dataframe(widget: WidgetInstance) -> List[str]:
         lines.extend(
             [
                 "st.markdown(",
-                f"    \"<style>{css_rule}</style>\",",
+                f"    '<style>{css_rule}</style>',",
                 "    unsafe_allow_html=True,",
                 ")",
             ]
@@ -1339,7 +1353,7 @@ def _codegen_data_editor(widget: WidgetInstance) -> List[str]:
         lines.extend(
             [
                 "st.markdown(",
-                f"    \"<style>{css_rule}</style>\",",
+                f"    '<style>{css_rule}</style>',",
                 "    unsafe_allow_html=True,",
                 ")",
             ]
@@ -1427,7 +1441,7 @@ def _codegen_metric(widget: WidgetInstance) -> List[str]:
     lines.extend(
         [
             "st.markdown(",
-            f"    \"<style>{css_rule}</style>\",",
+            f"    '<style>{css_rule}</style>',",
             "    unsafe_allow_html=True,",
             ")",
         ]
@@ -2946,7 +2960,7 @@ def _codegen_table(widget: WidgetInstance) -> List[str]:
     if css_rule:
         lines.extend([
             "st.markdown(",
-            f"    \"<style>{css_rule}</style>\",",
+            f"    '<style>{css_rule}</style>',",
             "    unsafe_allow_html=True,",
             ")",
         ])

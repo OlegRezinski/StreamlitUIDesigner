@@ -57,7 +57,7 @@ def generate_streamlit_code(design: Design) -> str:
             css_parts.append("background-size: cover; background-repeat: no-repeat; background-position: center; ")
         css_parts.append("}")
         lines.append(
-            "st.markdown(\"<style>" + "".join(css_parts) + "</style>\", unsafe_allow_html=True)"
+            "st.markdown('<style>" + "".join(css_parts) + "</style>', unsafe_allow_html=True)"
         )
 
     lines.append("")
@@ -119,9 +119,9 @@ def generate_streamlit_code(design: Design) -> str:
 
             if background_color and background_color != "#FFFFFF":
                 anchor = f"container-{widget.id}"
-                lines.append(f"{indent}    st.markdown(\"<div id=\\\"{anchor}\\\"></div>\", unsafe_allow_html=True)")
+                lines.append(f"{indent}    st.markdown('<div id=\"{anchor}\"></div>', unsafe_allow_html=True)")
                 lines.append(
-                    f"{indent}    st.markdown(\"<style>#{anchor} + div {{ background-color: {background_color}; padding: 0.5rem; border-radius: 0.25rem; }}</style>\", unsafe_allow_html=True)"
+                    f"{indent}    st.markdown('<style>#{anchor} + div {{ background-color: {background_color}; padding: 0.5rem; border-radius: 0.25rem; }}</style>', unsafe_allow_html=True)"
                 )
 
             nested = children.get(widget.id, [])
@@ -160,9 +160,9 @@ def generate_streamlit_code(design: Design) -> str:
             background_color = str(widget.props.get("background_color", "")).strip()
             if background_color:
                 anchor = f"cols-{widget.id}"
-                lines.append(f"{indent}st.markdown(\"<div id=\\\"{anchor}\\\"></div>\", unsafe_allow_html=True)")
+                lines.append(f"{indent}st.markdown('<div id=\"{anchor}\"></div>', unsafe_allow_html=True)")
                 css_parts = [
-                    f"#{anchor} + div [data-testid=\\\"column\\\"] {{ "
+                    f"#{anchor} + div [data-testid=\"column\"] {{ "
                     f"background-color: {background_color}; padding: 0.5rem; border-radius: 0.25rem; }}"
                 ]
                 for idx, col in enumerate(columns, start=1):
@@ -171,11 +171,11 @@ def generate_streamlit_code(design: Design) -> str:
                     col_bg = str(col.props.get("background_color", "")).strip()
                     if col_bg:
                         css_parts.append(
-                            f"#{anchor} + div [data-testid=\\\"column\\\"]:nth-of-type({idx}) {{ "
+                            f"#{anchor} + div [data-testid=\"column\"]:nth-of-type({idx}) {{ "
                             f"background-color: {col_bg}; }}"
                         )
                 lines.append(
-                    f"{indent}st.markdown(\"<style>{''.join(css_parts)}</style>\", unsafe_allow_html=True)"
+                    f"{indent}st.markdown('<style>{''.join(css_parts)}</style>', unsafe_allow_html=True)"
                 )
 
             ratios = [max(1, int(col.props.get("ratio", 1))) if col else 1 for col in columns]
@@ -417,3 +417,4 @@ def generate_streamlit_code(design: Design) -> str:
         lines.append("")
 
     return "\n".join(lines).rstrip() + "\n"
+

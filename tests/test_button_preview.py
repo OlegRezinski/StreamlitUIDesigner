@@ -70,6 +70,63 @@ def test_button_preview_stretch_width() -> None:
     assert any(btn.label == "Stretch Button" for btn in at.button)
 
 
+def test_button_preview_color_css_targets_button_key() -> None:
+    widget = WidgetInstance(
+        id="btn-color",
+        type="button",
+        props={
+            "label": "Colored Button",
+            "key": "",
+            "help": "",
+            "type": "secondary",
+            "icon": "",
+            "disabled": False,
+            "width": "content",
+            "custom_width": 200,
+            "background_color": "#123456",
+            "text_color": "#FEDCBA",
+        },
+    )
+    design = Design(name="Test", widgets=[widget])
+
+    at = AppTest.from_file("app.py")
+    at.session_state["design"] = design
+    at = at.run(timeout=15)
+
+    assert any(btn.label == "Colored Button" for btn in at.button)
+    css = _find_markdown_with(at, ".st-key-wgt_preview_button_btn-color button")
+    assert css
+    assert "background-color: #123456" in css
+    assert "color: #FEDCBA" in css
+
+
+def test_button_preview_no_color_css_when_empty() -> None:
+    widget = WidgetInstance(
+        id="btn-no-color",
+        type="button",
+        props={
+            "label": "Native Button",
+            "key": "",
+            "help": "",
+            "type": "secondary",
+            "icon": "",
+            "disabled": False,
+            "width": "content",
+            "custom_width": 200,
+            "background_color": "",
+            "text_color": "",
+        },
+    )
+    design = Design(name="Test", widgets=[widget])
+
+    at = AppTest.from_file("app.py")
+    at.session_state["design"] = design
+    at = at.run(timeout=15)
+
+    assert any(btn.label == "Native Button" for btn in at.button)
+    assert not any(".st-key-wgt_preview_button_btn-no-color button" in md.value for md in at.markdown)
+
+
 def test_text_preview_reflects_all_properties() -> None:
     widget = WidgetInstance(
         id="text-props",

@@ -10,6 +10,7 @@ from streamlit.errors import StreamlitAPIException
 from streamlit.string_util import validate_icon_or_emoji
 from streamlit_tree_select import tree_select
 
+from designer.backgrounds import css_url_value
 from designer.codegen import generate_streamlit_code
 from designer.models import Design, PropDefinition, WidgetInstance
 from designer.registry import clear_registry, list_widgets
@@ -909,13 +910,14 @@ def _render_preview(design: Design) -> None:
         """,
         unsafe_allow_html=True,
     )
-    if design.background_color or design.background_image:
+    preview_background_image = css_url_value(design.background_image)
+    if design.background_color or preview_background_image:
         css_parts = [".st-key-ui1_preview_pane { "]
         if design.background_color:
             css_parts.append(f"background-color: {design.background_color}; ")
-        if design.background_image:
-            css_parts.append(f"background-image: url('{design.background_image}'); ")
-            css_parts.append("background-size: cover; background-repeat: no-repeat; background-position: center; ")
+        if preview_background_image:
+            css_parts.append(f'background-image: url("{preview_background_image}"); ')
+            css_parts.append("background-size: cover; background-position: center; background-repeat: no-repeat; ")
         css_parts.append("padding: 0.75rem; ")
         css_parts.append("}")
         st.markdown(f"<style>{''.join(css_parts)}</style>", unsafe_allow_html=True)

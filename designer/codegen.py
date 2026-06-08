@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import List
 
+from .backgrounds import background_style_html, is_local_background_image
 from .models import Design
 from .registry import get_widget
 
@@ -35,6 +36,44 @@ def _build_children_map(design: Design) -> dict[str, list]:
     return children
 
 
+def _mockup_background_loader_lines() -> list[str]:
+    return [
+        "def _local_background_path(raw: str) -> Path:",
+        "    if raw.lower().startswith(\"file://\"):",
+        "        parsed = urlparse(raw)",
+        "        path_text = unquote(parsed.path)",
+        "        if len(path_text) >= 3 and path_text[0] == \"/\" and path_text[2] == \":\":",
+        "            path_text = path_text[1:]",
+        "        return Path(path_text).expanduser()",
+        "    return Path(raw).expanduser()",
+        "",
+        "",
+        "def set_bg_from_local(image_file: str, background_color: str = \"\") -> None:",
+        "    path = _local_background_path(image_file)",
+        "    if not path.exists():",
+        "        if background_color:",
+        "            st.markdown(",
+        "                f\"<style>.stApp {{ background-color: {background_color}; }}</style>\",",
+        "                unsafe_allow_html=True,",
+        "            )",
+        "        st.error(f\"Image not found: {image_file}\")",
+        "        return",
+        "",
+        "    ext = path.suffix.lower().replace(\".\", \"\") or \"png\"",
+        "    if ext == \"jpg\":",
+        "        ext = \"jpeg\"",
+        "",
+        "    encoded = base64.b64encode(path.read_bytes()).decode()",
+        "    css_parts = [\".stApp { \" ]",
+        "    if background_color:",
+        "        css_parts.append(f\"background-color: {background_color}; \")",
+        "    css_parts.append(f'background-image: url(\"data:image/{ext};base64,{encoded}\"); ')",
+        "    css_parts.append(\"background-size: cover; background-position: center; background-repeat: no-repeat; background-attachment: fixed; \")",
+        "    css_parts.append(\"}\")",
+        "    st.markdown(f\"<style>{''.join(css_parts)}</style>\", unsafe_allow_html=True)",
+    ]
+
+
 def generate_streamlit_code(design: Design) -> str:
     lines: List[str] = ["import streamlit as st"]
 
@@ -47,18 +86,21 @@ def generate_streamlit_code(design: Design) -> str:
         lines.append("st.set_page_config(layout=\"wide\")")
 
     background_color = getattr(design, "background_color", "")
-    background_image = getattr(design, "background_image", "")
-    if background_color or background_image:
-        css_parts = [".stApp { "]
-        if background_color:
-            css_parts.append(f"background-color: {background_color}; ")
-        if background_image:
-            css_parts.append(f"background-image: url('{background_image}'); ")
-            css_parts.append("background-size: cover; background-repeat: no-repeat; background-position: center; ")
-        css_parts.append("}")
-        lines.append(
-            "st.markdown('<style>" + "".join(css_parts) + "</style>', unsafe_allow_html=True)"
-        )
+    background_image_raw = getattr(design, "background_image", "")
+    if is_local_background_image(background_image_raw):
+        lines.extend([
+            "import base64",
+            "from pathlib import Path",
+            "from urllib.parse import unquote, urlparse",
+            "",
+        ])
+        lines.extend(_mockup_background_loader_lines())
+        lines.append("")
+        lines.append(f"set_bg_from_local({background_image_raw!r}, background_color={background_color!r})")
+    else:
+        style_html = background_style_html(".stApp", background_color, background_image_raw)
+        if style_html:
+            lines.append(f"st.markdown({style_html!r}, unsafe_allow_html=True)")
 
     lines.append("")
     children = _build_children_map(design)

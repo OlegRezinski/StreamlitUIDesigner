@@ -44,6 +44,7 @@ _DATAFRAME_SELECTION_MODES = [
 ]
 _DATA_EDITOR_NUM_ROWS = ["fixed", "dynamic", "add", "delete"]
 _ST_METRIC_PARAMS = set(inspect.signature(st.metric).parameters.keys())
+_ST_BUTTON_PARAMS = set(inspect.signature(st.button).parameters.keys())
 _SAMPLE_MAP_DATA = {
     "lat": [37.7749, 34.0522, 40.7128, 41.8781, 29.7604],
     "lon": [-122.4194, -118.2437, -74.0060, -87.6298, -95.3698],
@@ -115,6 +116,27 @@ def _button_width_value(width_mode: Any, custom_width: Any) -> str | int:
         parsed = _safe_int(custom_width, 200)
         return parsed if parsed > 0 else "content"
     return "content"
+
+
+def _button_color_value(value: Any) -> str:
+    text = str(value).strip()
+    return text if text else ""
+
+
+def _button_css_rule(button_key: Any, background_color: Any, text_color: Any) -> str:
+    bg = _button_color_value(background_color)
+    fg = _button_color_value(text_color)
+    if not bg and not fg:
+        return ""
+
+    declarations: list[str] = []
+    if bg:
+        declarations.append(f"background-color: {html.escape(bg, quote=True)} !important;")
+    if fg:
+        declarations.append(f"color: {html.escape(fg, quote=True)} !important;")
+
+    key = html.escape(str(button_key), quote=True)
+    return f".st-key-{key} button {{ {' '.join(declarations)} }}"
 
 
 def _safe_int(value: Any, default: int) -> int:
@@ -944,9 +966,10 @@ def _codegen_button(widget: WidgetInstance) -> List[str]:
     disabled = bool(widget.props.get("disabled", False))
     width_mode = widget.props.get("width", "content")
     custom_width = widget.props.get("custom_width", 200)
+    background_color = widget.props.get("background_color", "")
+    text_color = widget.props.get("text_color", "")
     width = _button_width_value(width_mode, custom_width)
-    bg_color = str(widget.props.get("background_color", "")).strip()
-    text_color = str(widget.props.get("text_color", "")).strip()
+    css_rule = _button_css_rule(key, background_color, text_color)
 
     lines = [
         "st.button(",
@@ -958,26 +981,21 @@ def _codegen_button(widget: WidgetInstance) -> List[str]:
     lines.append(f"    type={btn_type!r},")
     if icon:
         lines.append(f"    icon={icon!r},")
+        if "icon_position" in _ST_BUTTON_PARAMS:
+            lines.append("    icon_position='left',")
     if disabled:
         lines.append(f"    disabled={disabled},")
     lines.append(f"    width={width!r}," if isinstance(width, str) else f"    width={width},")
     lines.append(")")
-
-    # Inject CSS for custom colors
-    css_rules: list[str] = []
-    if bg_color:
-        css_rules.append(f"background-color: {bg_color} !important")
-    if text_color:
-        css_rules.append(f"color: {text_color} !important")
-    if css_rules:
-        selector = f".st-key-{key} button"
-        css_str = f"{selector} {{ {'; '.join(css_rules)} }}"
-        lines.extend([
-            "st.markdown(",
-            f"    '<style>{css_str}</style>',",
-            "    unsafe_allow_html=True,",
-            ")",
-        ])
+    if css_rule:
+        lines.extend(
+            [
+                "st.markdown(",
+                f"    '<style>{css_rule}</style>',",
+                "    unsafe_allow_html=True,",
+                ")",
+            ]
+        )
     return lines
 
 
@@ -2512,10 +2530,11 @@ def _render_button(widget: WidgetInstance) -> None:
     disabled = bool(widget.props.get("disabled", False))
     width_mode = widget.props.get("width", "content")
     custom_width = widget.props.get("custom_width", 200)
+    background_color = widget.props.get("background_color", "")
+    text_color = widget.props.get("text_color", "")
     width = _button_width_value(width_mode, custom_width)
-    bg_color = str(widget.props.get("background_color", "")).strip()
-    text_color = str(widget.props.get("text_color", "")).strip()
     key = _preview_key(widget)
+    css_rule = _button_css_rule(key, background_color, text_color)
 
     kwargs: dict[str, Any] = {
         "key": key,
@@ -2527,19 +2546,12 @@ def _render_button(widget: WidgetInstance) -> None:
         kwargs["help"] = help_text
     if icon:
         kwargs["icon"] = icon
+        if "icon_position" in _ST_BUTTON_PARAMS:
+            kwargs["icon_position"] = "left"
 
     st.button(label, **kwargs)
-
-    # Inject CSS for custom colors
-    css_rules: list[str] = []
-    if bg_color:
-        css_rules.append(f"background-color: {bg_color} !important")
-    if text_color:
-        css_rules.append(f"color: {text_color} !important")
-    if css_rules:
-        selector = f".st-key-{key} button"
-        css_str = f"{selector} {{ {'; '.join(css_rules)} }}"
-        st.markdown(f"<style>{css_str}</style>", unsafe_allow_html=True)
+    if css_rule:
+        st.markdown(f"<style>{css_rule}</style>", unsafe_allow_html=True)
 
 
 def _render_checkbox(widget: WidgetInstance) -> None:

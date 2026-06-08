@@ -1,3 +1,4 @@
+import base64
 from pathlib import Path
 
 from designer.codegen import generate_streamlit_code
@@ -65,6 +66,47 @@ def test_codegen_multiselect() -> None:
     code = generate_streamlit_code(design)
     assert "st.multiselect" in code
     assert "default=['B']" in code
+
+
+def test_codegen_background_image_windows_path_is_python_safe() -> None:
+    design = Design(
+        name="Test",
+        background_color="#FFFFFF",
+        background_image=r"C:\Users\O'Neil\Pictures\background.jpg",
+        widgets=[],
+    )
+
+    code = generate_streamlit_code(design)
+    assert "import base64" in code
+    assert "from pathlib import Path" in code
+    assert "def set_bg_from_local(image_file: str, background_color: str = \"\") -> None:" in code
+    assert "set_bg_from_local(" in code
+    assert "O\'Neil" in code
+    assert "background.jpg" in code
+    compile(code, "<generated>", "exec")
+
+
+def test_codegen_background_image_local_file_uses_mockup_loader(tmp_path) -> None:
+    image_path = tmp_path / "bg.png"
+    image_path.write_bytes(
+        base64.b64decode(
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9WlH0V8AAAAASUVORK5CYII="
+        )
+    )
+
+    design = Design(
+        name="Test",
+        background_color="#FFFFFF",
+        background_image=str(image_path),
+        widgets=[],
+    )
+
+    code = generate_streamlit_code(design)
+    assert "import base64" in code
+    assert "def set_bg_from_local(image_file: str, background_color: str = \"\") -> None:" in code
+    assert f"set_bg_from_local({str(image_path)!r}, background_color='#FFFFFF')" in code
+    assert 'data:image/{ext};base64,{encoded}' in code
+    compile(code, "<generated>", "exec")
 
 
 def test_codegen_columns() -> None:

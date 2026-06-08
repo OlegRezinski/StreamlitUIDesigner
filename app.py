@@ -7,6 +7,7 @@ from typing import Dict, List
 import streamlit as st
 from streamlit_tree_select import tree_select
 
+from designer.backgrounds import background_style_html
 from designer.codegen import generate_streamlit_code
 from designer.models import Design, PropDefinition, WidgetInstance
 from designer.registry import clear_registry, list_widgets
@@ -424,19 +425,17 @@ def _render_generated_code(design: Design) -> None:
 
 def _render_preview(design: Design) -> None:
     st.subheader("Preview")
+    preview_background_style = background_style_html(
+        ".stApp",
+        design.background_color,
+        design.background_image,
+    )
+    if preview_background_style:
+        st.markdown(preview_background_style, unsafe_allow_html=True)
+
     if not design.widgets:
         st.info("Add widgets to see the preview.")
         return
-
-    if design.background_color or design.background_image:
-        css_parts = [".stApp { "]
-        if design.background_color:
-            css_parts.append(f"background-color: {design.background_color}; ")
-        if design.background_image:
-            css_parts.append(f"background-image: url('{design.background_image}'); ")
-            css_parts.append("background-size: cover; background-repeat: no-repeat; background-position: center; ")
-        css_parts.append("}")
-        st.markdown(f"<style>{''.join(css_parts)}</style>", unsafe_allow_html=True)
 
     children: dict[str, list[WidgetInstance]] = {}
     for widget in design.widgets:

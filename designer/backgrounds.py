@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import mimetypes
+import re
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 
@@ -70,5 +71,29 @@ def background_style_html(selector: str, background_color: str = "", background_
         css_parts.append("background-size: cover; background-position: center; background-repeat: no-repeat; background-attachment: fixed; ")
     css_parts.append("}")
     return f"<style>{''.join(css_parts)}</style>"
+
+
+def parse_background_style(css: str) -> tuple[str, str]:
+    """Inverse of ``background_style_html``.
+
+    Given a CSS/style string (optionally wrapped in ``<style>...</style>``),
+    extract ``(background_color, background_image)``. Either value may be an
+    empty string when not present. This never executes code; it only scans
+    text. Used by the code-import feature to recover page background settings.
+    """
+    text = str(css or "")
+
+    color = ""
+    color_match = re.search(r"background-color\s*:\s*([^;}\"']+)", text)
+    if color_match:
+        color = color_match.group(1).strip()
+
+    image = ""
+    # background-image: url("...") or url('...') or url(...)
+    image_match = re.search(r"background-image\s*:\s*url\(\s*(['\"]?)(.*?)\1\s*\)", text, re.DOTALL)
+    if image_match:
+        image = image_match.group(2).strip()
+
+    return color, image
 
 

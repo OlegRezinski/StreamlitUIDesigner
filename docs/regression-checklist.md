@@ -250,3 +250,26 @@ Use this checklist before marking a milestone complete.
 - [ ] width="custom" with custom_width generates integer width.
 - [ ] Custom key overrides auto-generated key.
 - [ ] type="primary"/"secondary"/"tertiary" generates correctly.
+
+## Load from code (import)
+
+- [ ] "Load from code" expander appears in the Generated Code tab.
+- [ ] Uploading a previously downloaded app.py reconstructs widgets in the Preview after confirming.
+- [ ] Importing requires clicking "Replace current design"; current design is untouched until then.
+- [ ] After a successful import, the hierarchy selection resets to Main and container/column/tab targets are cleared.
+- [ ] Uploaded code is parsed only and NEVER executed (no exec/eval/import of the file).
+- [ ] Non-Streamlit file (no `import streamlit`, no `st.` calls) is rejected with an error; current design unchanged.
+- [ ] File with a syntax error reports the error with a line number; current design unchanged.
+- [ ] Unknown `st.xxx` widgets produce a warning and are skipped; the rest still imports.
+- [ ] Non-literal call arguments produce a warning and fall back to widget defaults.
+- [ ] Containers (container/expander/form/popover/status/spinner/empty/sidebar) reconstruct with nested children.
+- [ ] `st.columns([...])` (incl. custom variable names and multiple blocks) reconstructs columns with ratios.
+- [ ] `st.tabs([...])` reconstructs tabs with labels and child placement.
+- [ ] `st.set_page_config(layout="wide")` restores wide screen width.
+- [ ] Background color/image from `.stApp` style block is restored.
+- [ ] Loops/function defs/decorators are skipped with a warning; the rest still imports.
+- [ ] Oversized or non-UTF-8 files are rejected with a clear message.
+- [ ] After import, the success summary reports the number of reconstructed elements.
+- [ ] A mixed file shows an "Ignored N non-Streamlit statement(s)" notice with an expandable list.
+- [ ] A clean generated file shows zero ignored statements (styling blocks are not counted).
+

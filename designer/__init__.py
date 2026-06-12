@@ -1,4 +1,5 @@
 from .codegen import generate_streamlit_code
+from .code_import import ImportDiagnostic, ImportResult, import_design_from_code
 from .models import Design, PropDefinition, WidgetDefinition, WidgetInstance
 from .registry import clear_registry, get_widget, list_widgets, register_widget
 from .serialization import design_from_dict, design_to_dict
@@ -10,6 +11,9 @@ __all__ = [
     "WidgetDefinition",
     "WidgetInstance",
     "generate_streamlit_code",
+    "import_design_from_code",
+    "ImportResult",
+    "ImportDiagnostic",
     "register_widget",
     "get_widget",
     "list_widgets",

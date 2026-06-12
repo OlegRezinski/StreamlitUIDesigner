@@ -12,6 +12,7 @@ from streamlit_tree_select import tree_select
 
 from designer.backgrounds import css_url_value
 from designer.codegen import generate_streamlit_code
+from designer.code_import import import_design_from_code
 from designer.models import Design, PropDefinition, WidgetInstance
 from designer.registry import clear_registry, list_widgets
 from designer.widgets import register_default_widgets, reset_preview_keys
@@ -833,9 +834,10 @@ def _render_properties(design: Design) -> None:
             key="main_background_color",
         )
         background_image = st.text_input(
-            "Background image",
+            "Background image (URL)",
             value=design.background_image,
             key="main_background_image",
+            help="Paste an HTTP/HTTPS URL for the background image.",
         )
         changed = (
             screen_width != design.screen_width
@@ -874,6 +876,71 @@ def _render_generated_code(design: Design) -> None:
         file_name="app.py",
         mime="text/x-python",
     )
+
+
+def _apply_imported_design(imported: Design) -> None:
+    """Commit an imported design into session state and reset selection safely."""
+    st.session_state["design"] = imported
+    # Reset selection to Main (per design-tab guidelines) and clear targets.
+    st.session_state["selected_id"] = MAIN_CONTAINER_ID
+    st.session_state["hierarchy_checked_id"] = MAIN_CONTAINER_ID
+    st.session_state["hierarchy_checked_prev"] = [MAIN_CONTAINER_ID]
+    st.session_state["target_container_id"] = None
+    st.session_state["target_column_id"] = None
+    st.session_state["target_tab_id"] = None
+    st.session_state["widget_counters"] = {}
+    st.session_state.pop("pending_import", None)
+
+
+def _render_code_import() -> None:
+    with st.expander("Load from code", expanded=False):
+        st.caption(
+            "Upload a previously generated app.py to rebuild the design in the "
+            "Preview. The file is parsed only - it is never executed."
+        )
+        uploaded = st.file_uploader("Upload app.py", type=["py"], key="code_import_uploader")
+        if uploaded is not None:
+            raw = uploaded.getvalue()
+            try:
+                source = raw.decode("utf-8-sig")
+            except UnicodeDecodeError:
+                st.error("Could not decode file - expected UTF-8 encoded Python source.")
+                return
+
+            result = import_design_from_code(source)
+
+            for diag in result.errors:
+                location = f" (line {diag.lineno})" if diag.lineno else ""
+                st.error(f"{diag.message}{location}")
+            for diag in result.warnings:
+                location = f" (line {diag.lineno})" if diag.lineno else ""
+                st.warning(f"{diag.message}{location}")
+
+            if not result.ok or result.design is None:
+                st.info("Current design was left unchanged.")
+                return
+
+            widget_count = result.widget_count
+            warning_count = len(result.warnings)
+            ignored = result.ignored
+            summary = f"Reconstructed {widget_count} element(s) from the uploaded file."
+            if warning_count:
+                summary += f" {warning_count} item(s) could not be imported (see warnings above)."
+            st.success(summary)
+
+            if ignored:
+                st.info(f"Ignored {len(ignored)} non-Streamlit statement(s).")
+                with st.expander(f"Show {len(ignored)} ignored statement(s)", expanded=False):
+                    for diag in ignored:
+                        location = f"line {diag.lineno}: " if diag.lineno else ""
+                        detail = f" ({diag.node_summary})" if diag.node_summary else ""
+                        st.write(f"- {location}{diag.message}{detail}")
+
+            st.warning("Replacing will discard your current design.")
+            if st.button("Replace current design", key="code_import_confirm"):
+                _apply_imported_design(result.design)
+                st.rerun()
+
 
 
 def _render_preview(design: Design) -> None:
@@ -1594,6 +1661,7 @@ def main() -> None:
                     _render_properties(design)
 
     with tab_code:
+        _render_code_import()
         _render_generated_code(st.session_state["design"])
 
 

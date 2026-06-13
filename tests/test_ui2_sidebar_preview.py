@@ -60,3 +60,28 @@ def test_ui2_sidebar_preview_collapses_horizontally() -> None:
     assert any(col.weight == pytest.approx(0.06, abs=1e-6) for col in at.columns)
     assert any(col.weight == pytest.approx(0.94, abs=1e-6) for col in at.columns)
 
+
+def test_ui2_sidebar_preview_css_enables_independent_scroll_regions() -> None:
+    sidebar = WidgetInstance(id="sidebar-root", type="sidebar", props={"label": "Navigation"})
+    design = Design(name="Preview", widgets=[sidebar])
+
+    at = AppTest.from_file("UI_2.py")
+    at.session_state["design"] = design
+    at = at.run(timeout=20)
+
+    preview_css_blocks = [
+        md.value
+        for md in at.markdown
+        if "st-key-ui2_preview_split_region" in md.value
+    ]
+    assert preview_css_blocks
+
+    preview_css = "\n".join(preview_css_blocks)
+    assert "height: 720px;" in preview_css
+    assert "overflow: hidden;" in preview_css
+    assert "[data-testid=\"stHorizontalBlock\"]" in preview_css and "align-items: stretch;" in preview_css
+    assert "[data-testid=\"column\"] > div" in preview_css and "height: 100%;" in preview_css
+    assert ".st-key-ui2_preview_sidebar_shell" in preview_css and "overflow-y: auto;" in preview_css
+    assert ".st-key-ui2_preview_sidebar_shell" in preview_css and "height: 100%;" in preview_css
+    assert ".st-key-ui2_preview_sidebar_main" in preview_css and "overflow-y: auto;" in preview_css
+    assert ".st-key-ui2_preview_sidebar_main" in preview_css and "height: 100%;" in preview_css

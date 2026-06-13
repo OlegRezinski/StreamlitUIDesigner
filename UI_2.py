@@ -945,34 +945,65 @@ def _render_code_import() -> None:
 
 def _render_preview(design: Design) -> None:
     reset_preview_keys()
-    st.subheader("Preview")
     st.markdown(
-        """
+        f"""
         <style>
-        .st-key-ui2_preview_sidebar_shell {
+        /* Shared split region below the "Preview" subheader */
+        .st-key-ui2_preview_split_region,
+        .st-key-ui2_preview_split_region > div {{
+            height: {SCROLLABLE_PANE_HEIGHT}px;
+            overflow: hidden;
+        }}
+
+        .st-key-ui2_preview_split_region [data-testid="stHorizontalBlock"] {{
+            align-items: stretch;
+            height: 100%;
+        }}
+
+        .st-key-ui2_preview_split_region [data-testid="column"] > div {{
+            height: 100%;
+            overflow: hidden;
+        }}
+
+        /* Sidebar panel: same height as the preview pane (SCROLLABLE_PANE_HEIGHT) */
+        /* height is enforced via st.container(height=) in Python; CSS handles only visuals */
+        .st-key-ui2_preview_sidebar_shell {{
             background: var(--secondary-background-color, #F0F2F6);
-            border: 1px solid rgba(49, 51, 63, 0.2);
-            border-radius: 0.5rem;
+            border-top: 1px solid rgba(49, 51, 63, 0.2);
+            border-left: 1px solid rgba(49, 51, 63, 0.2);
+            border-bottom: 1px solid rgba(49, 51, 63, 0.2);
+            border-right: 2px solid rgba(49, 51, 63, 0.25);
+            border-radius: 0.4rem 0 0 0.4rem;
             padding: 0.5rem 0.65rem 0.75rem 0.65rem;
-            min-height: 14rem;
-        }
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            overscroll-behavior: contain;
+        }}
 
-        .st-key-ui2_preview_sidebar_collapsed {
+        .st-key-ui2_preview_sidebar_collapsed {{
             background: var(--secondary-background-color, #F0F2F6);
-            border: 1px solid rgba(49, 51, 63, 0.2);
-            border-radius: 0.5rem;
+            border-top: 1px solid rgba(49, 51, 63, 0.2);
+            border-left: 1px solid rgba(49, 51, 63, 0.2);
+            border-bottom: 1px solid rgba(49, 51, 63, 0.2);
+            border-right: 2px solid rgba(49, 51, 63, 0.25);
+            border-radius: 0.4rem 0 0 0.4rem;
             padding: 0.5rem 0.35rem;
-            min-height: 14rem;
-        }
+            height: 100%;
+            overflow: hidden;
+        }}
 
-        .st-key-ui2_preview_sidebar_main {
-            min-height: 14rem;
-        }
+        .st-key-ui2_preview_sidebar_main {{
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            overscroll-behavior: contain;
+        }}
 
         .st-key-ui2_preview_sidebar_shell [data-testid="stButton"] button,
-        .st-key-ui2_preview_sidebar_collapsed [data-testid="stButton"] button {
+        .st-key-ui2_preview_sidebar_collapsed [data-testid="stButton"] button {{
             min-width: 2.2rem;
-        }
+        }}
         </style>
         """,
         unsafe_allow_html=True,
@@ -1233,7 +1264,7 @@ def _render_preview(design: Design) -> None:
     def _render_sidebar_preview() -> None:
         collapsed = bool(st.session_state.get("ui2_preview_sidebar_collapsed", False))
         container_key = "ui2_preview_sidebar_collapsed" if collapsed else "ui2_preview_sidebar_shell"
-        with st.container(key=container_key):
+        with st.container(height=SCROLLABLE_PANE_HEIGHT, key=container_key):
             header_cols = st.columns([6, 1], vertical_alignment="top")
             with header_cols[1]:
                 toggle_label = "▶" if collapsed else "◀"
@@ -1256,7 +1287,7 @@ def _render_preview(design: Design) -> None:
                     st.divider()
 
     def _render_main_preview() -> None:
-        with st.container(key="ui2_preview_sidebar_main"):
+        with st.container(height=SCROLLABLE_PANE_HEIGHT, key="ui2_preview_sidebar_main"):
             if main_widgets:
                 for widget in main_widgets:
                     _render_widget(widget)
@@ -1269,11 +1300,12 @@ def _render_preview(design: Design) -> None:
     if sidebar_widgets:
         collapsed = bool(st.session_state.get("ui2_preview_sidebar_collapsed", False))
         column_ratio = PREVIEW_SIDEBAR_COLLAPSED_RATIO if collapsed else PREVIEW_SIDEBAR_EXPANDED_RATIO
-        sidebar_col, main_col = st.columns(column_ratio, gap="small")
-        with sidebar_col:
-            _render_sidebar_preview()
-        with main_col:
-            _render_main_preview()
+        with st.container(key="ui2_preview_split_region"):
+            sidebar_col, main_col = st.columns(column_ratio, gap="small")
+            with sidebar_col:
+                _render_sidebar_preview()
+            with main_col:
+                _render_main_preview()
         return
 
     for widget in root_widgets:
@@ -1641,6 +1673,7 @@ def main() -> None:
                 with st.container(height=SCROLLABLE_PANE_HEIGHT, border=True):
                     _render_hierarchy(design)
         with col_preview:
+            st.subheader("Preview")
             with st.container(height=SCROLLABLE_PANE_HEIGHT, border=True, key="ui1_preview_pane"):
                 _render_preview(design)
         with col_props:
